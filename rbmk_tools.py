@@ -1,11 +1,10 @@
 from ReadWriteMemory import ReadWriteMemory
 from os import system
 import struct as stc
+
 rwm = ReadWriteMemory()
 process = rwm.get_process_by_name('RXMODEL2.exe')
-rods = []
-for i in range(268580976, 268581073, 4):
-    rods.append(i)
+rods = list(range(268580976, 268581073, 4))
 
 
 def cls():
@@ -24,10 +23,9 @@ def reint(n):
 
 def fuelmenu(n):
     cls()
-    selrod = process.get_pointer(rods[n-1])
+    selrod = process.get_pointer(rods[n - 1])
     print('Selected fuel channel: ', n)
-    left = process.read(rods[n-1])
-    print('Fuel left ', "%.2f" % (refl(left) * 100), '%')
+    print('Fuel left ', fuel[n - 1], '%')
     print('''
 1. Remove all fuel
 2. Completely refuel
@@ -35,7 +33,6 @@ def fuelmenu(n):
 Anything else will return to menu''')
     rodmen = input()
     if not rodmen.isdecimal():
-        cls()
         return
     elif 0 < int(rodmen) < 4:
         if int(rodmen) == 1:
@@ -45,12 +42,10 @@ Anything else will return to menu''')
         elif int(rodmen) == 3:
             amount = input('Please enter percentage: ')
             if not amount.isdecimal() or not (0 < int(amount) < 101):
-                cls()
                 return
             else:
                 process.write(selrod, reint(int(amount) / 100))
         else:
-            cls()
             return
     else:
         return
@@ -70,22 +65,14 @@ def getcur():
 
 def mainmenu():
     getcur()
-    print('Fuel in 1 :', fuel[0], '% |  Fuel in 2 :', fuel[1], '% |  Fuel in 3 :', fuel[2], '% |  Fuel in 4 :', fuel[3],
-          '% |   Fuel in 5 :', fuel[4], '%')
-    print()
-    print('Fuel in 6 :', fuel[5], '% |  Fuel in 7 :', fuel[6], '% |  Fuel in 8 :', fuel[7], '% |  Fuel in 9 :', fuel[8],
-          '% |   Fuel in 10:', fuel[9], '%')
-    print()
-    print('Fuel in 11:', fuel[10], '% |  Fuel in 12:', fuel[11], '% |  Fuel in 13:', fuel[12], '% |  Fuel in 14:',
-          fuel[13], '% |   Fuel in 15:', fuel[14], '%')
-    print()
-    print('Fuel in 16:', fuel[15], '% |  Fuel in 17:', fuel[16], '% |  Fuel in 18:', fuel[17], '% |  Fuel in 19:',
-          fuel[18], '% |   Fuel in 20:', fuel[19], '%')
-    print()
-    print('Fuel in 21:', fuel[20], '% |  Fuel in 22:', fuel[21], '% |  Fuel in 23:', fuel[22], '% |  Fuel in 24:',
-          fuel[23], '% |   Fuel in 25:', fuel[24], '%')
+    for i in range(0, 21, 5):
+        print(f'Fuel in', f'0{i + 1}:' if i + 1 < 10 else f'{i + 1}:', f'{fuel[i]}'.rjust(8) + '% |\t\t',
+              f'Fuel in', f'0{i + 2}:' if i + 2 < 10 else f'{i + 2}:', f'{fuel[i + 1]}'.rjust(8) + '% |\t',
+              f'Fuel in', f'0{i + 3}:' if i + 3 < 10 else f'{i + 3}:', f'{fuel[i + 2]}'.rjust(8) + '% |\t',
+              f'Fuel in', f'0{i + 4}:' if i + 4 < 10 else f'{i + 4}:', f'{fuel[i + 3]}'.rjust(8) + '% |\t',
+              f'Fuel in', f'0{i + 5}:' if i + 5 < 10 else f'{i + 5}:', f'{fuel[i + 4]}'.rjust(8) + '% |\t',)
     print('''
-Enter a fuel channel number, zoe for all, exit or anything else/nothing to reload data''')
+Enter a fuel channel number, zoe for all, exit to exit or anything else/nothing to reload data''')
     select = input()
 
     if select == 'zoe':
@@ -99,7 +86,6 @@ Enter a fuel channel number, zoe for all, exit or anything else/nothing to reloa
 Anything else will return to menu
 ''')
         if not allert.isdecimal():
-            cls()
             return
 
         elif int(allert) == 1:
@@ -118,7 +104,6 @@ Anything else will return to menu
         elif int(allert) == 3:
             amount = input('Please enter percentage ')
             if not amount.isdecimal() or not (0 < int(amount) < 101):
-                cls()
                 return
             else:
                 for t in rods:
@@ -128,7 +113,6 @@ Anything else will return to menu
         exit(200)
 
     elif not select.isdecimal():
-        cls()
         return
 
     elif 0 < int(select) < 26:
@@ -136,5 +120,5 @@ Anything else will return to menu
 
 
 while 1:
-    mainmenu()
     cls()
+    mainmenu()
