@@ -1,14 +1,38 @@
 from ReadWriteMemory import ReadWriteMemory
+from ReadWriteMemory import ReadWriteMemoryError as Rwmerr
 from os import system
 import struct as stc
 
 rwm = ReadWriteMemory()
-process = rwm.get_process_by_name('RXMODEL2.exe')
+try:
+    process = rwm.get_process_by_name('RXMODEL.exe')
+except Rwmerr:
+    try:
+        process = rwm.get_process_by_name('RXMODEL2.exe')
+    except Rwmerr:
+        print('Neither rxmodel.exe nor rxmodel2.exe found\n'
+              "You can enter the process name manually, keep in mind that it's case sensitive:")
+        processname = input()
+        try:
+            process = rwm.get_process_by_name(processname)
+        except Rwmerr:
+            input('Process not found, quitting')
+            exit('Error: Process not found')
+
 rods = list(range(268580976, 268581073, 4))
+process.open()
 
 
 def cls():
     return system('cls')
+
+
+def isfloat(n):
+    try:
+        float(n)
+        return True
+    except ValueError:
+        return False
 
 
 def refl(n):
@@ -21,7 +45,7 @@ def reint(n):
     return stc.unpack('i', n)[0]
 
 
-def fuelmenu(n):
+def fuelmenu(n, fuel, rods, process):
     cls()
     selrod = process.get_pointer(rods[n - 1])
     print('Selected fuel channel: ', n)
@@ -41,36 +65,30 @@ Anything else will return to menu''')
             process.write(selrod, reint(1.00))
         elif int(rodmen) == 3:
             amount = input('Please enter percentage: ')
-            if not amount.isdecimal() or not (0 < int(amount) < 101):
+            if not isfloat(amount) or not (0 < float(amount) < 101):
                 return
             else:
-                process.write(selrod, reint(int(amount) / 100))
+                process.write(selrod, reint(float(amount) / 100))
         else:
             return
     else:
         return
 
 
-process.open()
 fuel = []
 
 
-def getcur():
+def getcur(rods, fuel, process):
     fuel.clear()
     for t in rods:
-        curr = process.get_pointer(t)
-        curr2 = process.read(curr)
-        fuel.append("%.2f" % (refl(curr2) * 100))
+        fuel.append("%.2f" % (refl(process.read(process.get_pointer(t))) * 100))
 
 
 def mainmenu():
-    getcur()
+    getcur(rods, fuel, process)
     for i in range(0, 21, 5):
-        print(f'Fuel in', f'0{i + 1}:' if i + 1 < 10 else f'{i + 1}:', f'{fuel[i]}'.rjust(8) + '% |\t\t',
-              f'Fuel in', f'0{i + 2}:' if i + 2 < 10 else f'{i + 2}:', f'{fuel[i + 1]}'.rjust(8) + '% |\t',
-              f'Fuel in', f'0{i + 3}:' if i + 3 < 10 else f'{i + 3}:', f'{fuel[i + 2]}'.rjust(8) + '% |\t',
-              f'Fuel in', f'0{i + 4}:' if i + 4 < 10 else f'{i + 4}:', f'{fuel[i + 3]}'.rjust(8) + '% |\t',
-              f'Fuel in', f'0{i + 5}:' if i + 5 < 10 else f'{i + 5}:', f'{fuel[i + 4]}'.rjust(8) + '% |\t',)
+        print("|\t".join([f"Fuel in 0{j + 1}:{fuel[j]:>8}% " if j < 9 else f"Fuel in {j + 1}:{fuel[j]:>8}% "
+                          for j in range(i, i + 5)]))
     print('''
 Enter a fuel channel number, zoe for all, exit to exit or anything else/nothing to reload data''')
     select = input()
@@ -85,6 +103,7 @@ Enter a fuel channel number, zoe for all, exit to exit or anything else/nothing 
 3. Fill all channels to specific percentage
 Anything else will return to menu
 ''')
+
         if not allert.isdecimal():
             return
 
@@ -103,11 +122,11 @@ Anything else will return to menu
 
         elif int(allert) == 3:
             amount = input('Please enter percentage ')
-            if not amount.isdecimal() or not (0 < int(amount) < 101):
+            if not isfloat(amount) or not (0 < float(amount) < 101):
                 return
             else:
                 for t in rods:
-                    process.write(t, reint(int(amount) / 100))
+                    process.write(t, reint(float(amount) / 100))
 
     elif select == 'exit':
         exit(200)
@@ -116,7 +135,7 @@ Anything else will return to menu
         return
 
     elif 0 < int(select) < 26:
-        fuelmenu(int(select))
+        fuelmenu(int(select), fuel, rods, process)
 
 
 while 1:
